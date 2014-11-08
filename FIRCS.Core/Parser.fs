@@ -6,7 +6,8 @@ open ParserInternal
 
 open FParsec
 
-let nonwhite (c: char) = let x = int c in not (x = 0x20 || x = 0x0 || x = 0xD || x = 0xA)
+let nonnewline (c: char) = not (c = '\r' || c = '\n')
+let nonwhite (c: char) = not (int c = 0 || c = ' ' || c = '\r' || c = '\n')
 let parseNonwhite: char parser = satisfy nonwhite
 
 let parseServer: Server parser = parseHostname
@@ -26,6 +27,11 @@ let parsePrefix: Prefix parser =
         parsePrefixNick |>> Prefix.PrefixNick
     ]
 let parseCommand: parser = regex @"[a-zA-Z]+|\d{3}"
-let parseParameterlessMessage: Grammar.Message parser =
+let parseArguments =
+    let parseNormalArgument = many1Satisfy2 (fun c -> c <> ':' && nonwhite c) nonwhite
+    let parseTrailingArgument = pchar ':' >>. many1Satisfy nonnewline
+    sepBy (parseTrailingArgument <|> parseNormalArgument) (pchar ' ')
+let parseMessage: Grammar.Message parser =
     let first = pchar ':' >>. parsePrefix .>> pchar ' ' |> opt
-    first .>>. parseCommand |>> fun (prefix, command) -> (prefix, command, [])
+    let third = pchar ' ' >>. parseArguments
+    tuple3 first parseCommand third
