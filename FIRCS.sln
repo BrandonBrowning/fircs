@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FIRCS", "FIRCS\FIRCS.fsproj", "{5307B1F0-0922-4356-B3A1-304D01C64EB7}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Bot", "FIRCS\Bot.fsproj", "{5307B1F0-0922-4356-B3A1-304D01C64EB7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FIRCS.Core", "FIRCS.Core\FIRCS.Core.fsproj", "{9D35D6D6-6331-4072-BA74-37875CA75CBB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Core", "FIRCS.Core\Core.fsproj", "{9D35D6D6-6331-4072-BA74-37875CA75CBB}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FIRCS.Test", "FIRCS.Test\FIRCS.Test.fsproj", "{E786A7F2-62AB-4FC9-978D-C66E09101DF6}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Test", "FIRCS.Test\Test.fsproj", "{E786A7F2-62AB-4FC9-978D-C66E09101DF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
