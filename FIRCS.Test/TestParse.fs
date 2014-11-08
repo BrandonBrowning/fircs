@@ -6,6 +6,14 @@ open Parser
 open FParsec
 open NUnit.Framework
 
+[<Test>] let ``(parsePrefixNick match) foobar``() =
+    assertParseMatches parsePrefixNick "foobar"
+        ("foobar", None, None)
+
+[<Test>] let ``(parsePrefixNick match) foobar!~foobar``() =
+    assertParseMatches parsePrefixNick "foobar!~foobar"
+        ("foobar", Some "~foobar", None)
+
 [<Test>] let ``(parsePrefixNick match) foobar!~foobar@example.com``() =
     assertParseMatches parsePrefixNick "foobar!~foobar@example.com"
         ("foobar", Some "~foobar", Some "example.com")
