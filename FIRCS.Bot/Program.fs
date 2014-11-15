@@ -88,15 +88,17 @@ let nick = "sirsalad"
 let user = nick
 let channel = "#uakroncs"
 
-let processMessage (message: Message): Message seq =
+let keepAliveModule ((prefixOpt, command, args): Message): Message seq =
     seq {
-        let (prefixOpt, command, args) = message
-
         if like command "ping" then
             yield pongMessage args.[0]
         else if like command "mode" then
             yield joinMessage channel
-        else if like command "privmsg" then
+    }
+
+let echoModule ((prefixOpt, command, args): Message): Message seq =
+    seq {
+        if like command "privmsg" then
             match prefixOpt with
                 | Some(PrefixNick(from_nick, _, _)) ->
                     let target = args.[0]
@@ -123,9 +125,13 @@ let main argv =
             userMessage user |> send
             nickMessage nick |> send
 
-            let rec loop() =
-                gets() |> Seq.map processMessage |> Seq.concat |> Seq.iter send
-                loop()
+            let modules = [keepAliveModule; echoModule]
 
+            let rec loop() =
+                for inMessage in gets() do
+                    for ircModule in modules do
+                        for outMessage in ircModule inMessage do
+                            send outMessage
+                loop()
             loop()
     0
