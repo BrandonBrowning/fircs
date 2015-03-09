@@ -1,5 +1,6 @@
 ﻿
 module Parser
+
 open Common
 open Grammar
 open ParserInternal
