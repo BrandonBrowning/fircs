@@ -27,7 +27,12 @@ type GetRulesTextResult =
 
 let getRulesTextLine (search: string): GetRulesTextResult =
     let escapedSearch = Uri.EscapeDataString search
-    let url = sprintf "http://magiccards.info/query?q=%s" escapedSearch
+    let url = 
+        if String.Equals(search, "random", StringComparison.InvariantCultureIgnoreCase) then
+            "http://magiccards.info/random.html"
+        else
+            sprintf "http://magiccards.info/query?q=%s" escapedSearch
+
     let req = WebRequest.Create(url)
     use resp = req.GetResponse() :?> HttpWebResponse
     
