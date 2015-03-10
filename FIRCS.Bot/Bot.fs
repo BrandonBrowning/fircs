@@ -4,12 +4,14 @@ module Bot
 open Core
 open FParsec
 open Grammar
+open Magic
 open Parser
 
 open System
 open System.Net
 open System.Net.Sockets
 open System.Text
+open System.Text.RegularExpressions
 open System.Threading
 
 let messageToString (message: Message): string =
@@ -114,6 +116,33 @@ let echoModule ((prefixOpt, command, args): Message): Message seq =
                 | _ -> ()
     }
 
+let shittyMagicModule ((prefixOpt, command, args): Message): Message seq =
+    let extractKeywords (text: string): string seq =
+        seq {
+            for m in Regex.Matches(text, "\|([\w_,\-' ]{3,})\|") do
+                if m.Groups.Count = 2 then
+                    yield m.Groups.[1].Value
+        }
+
+    seq {
+        if like command "privmsg" then
+            match prefixOpt with
+                | Some(PrefixNick(from_nick, _, _)) ->
+                    let target = args.[0]
+                    let message = args.[1]
+
+                    if target = nick then
+                        yield privMessage from_nick message
+                    else if target = channel then
+                        let keywords = extractKeywords message |> List.ofSeq
+                        if keywords.Length > 0 then
+                            for keyword in keywords do
+                                match getRulesTextLine keyword with
+                                    | Ok(response) -> yield response |> channelMessage channel
+                                    | failure -> yield sprintf "Failed to show %s due to %A" keyword failure |> channelMessage channel
+                | _ -> ()
+    }
+
 let execBot() =
     match makeIRCSocket "concrete.slashnet.org" with
         | None -> failwith "Could not get a socket"
@@ -124,7 +153,7 @@ let execBot() =
             userMessage user |> send
             nickMessage nick |> send
 
-            let modules = [keepAliveModule; echoModule]
+            let modules = [keepAliveModule; echoModule; shittyMagicModule]
 
             let rec loop() =
                 for inMessage in gets() do
