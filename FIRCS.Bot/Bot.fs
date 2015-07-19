@@ -65,7 +65,8 @@ let sendSocketLine (socket: Socket) (str: string) =
 let getSocketMessages (socket: Socket): Message seq =
     seq {
         for line in getSocketLines socket do
-            match runParserOnString parseMessage () "irc input" line with
+            let cleanLine = line.Trim()
+            match runParserOnString parseMessage () "irc input" cleanLine with
                 | Failure(text, error, state) ->
                     printfn "! Failed to parse the following..\n%s" text
                 | Success(result, state, position) ->

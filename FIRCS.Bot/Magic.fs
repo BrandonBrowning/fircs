@@ -3,20 +3,30 @@ module Magic
 
 open System
 open System.Net
+open System.Text.RegularExpressions
+
 open HtmlAgilityPack
 
-let fixRulesHtml (innerHtml: string): string =
+let regexParens = @"\([^)]*\)"
+let regexParensStatement = sprintf @"%s" regexParens
+let regexReplace (pat: string) (replace: string) (s: string) = Regex.Replace(s, pat, replace)
+
+let fixPreRulesText (preRules: string): string =
+    preRules
+        |> regexReplace @" \(\d+\)\s*$" "" // remove total cmc at end
+        |> regexReplace @" (\d)$" @" {$1}" // turn bare number cost into bracket style for clarity
+
+let fixRulesHtml (name: string) (innerHtml: string): string =
     let unsplit = innerHtml.Replace("<b>", "").Replace("</b>", "")
     let split = unsplit.Split(Array.init 1 (fun _ -> "<br>"), StringSplitOptions.RemoveEmptyEntries)
-    let fixedLines = seq {
-        for line in split do
-            let clean = line.Trim()
-            if not <| clean.EndsWith(".") then
-                yield clean + "."
-            else
-                yield clean
-    }
-    String.Join("  ", fixedLines)
+    let fixedLines = split |> Seq.map (fun line -> line.Trim())
+    let body = String.Join("  ", fixedLines)
+    let replacedName = body.Replace(name, "~")
+    replacedName
+        |> regexReplace regexParensStatement "" // get rid of parens explanations
+        |> regexReplace @"(?<=\S) {2,}(?=\S)" @".  " // turn extra spacing (previous newlines?) into periods
+        |> regexReplace @"\.\.(?=\s+)" @"." // above is buggy and leads to double period statements
+        |> regexReplace @"\{(\d|W|U|B|R|G)\}+" @"{$1}" // simplify costs
 
 type GetRulesTextResult =
     | Ok of string
@@ -56,9 +66,10 @@ let getRulesTextLine (search: string): GetRulesTextResult =
                         let preRulesNode = middleColumn.SelectSingleNode("p")
 
                         if nameUrlNode <> null && preRulesNode <> null then
-                            let rulesText = rulesTextNodes.[0].InnerHtml |> fixRulesHtml
-                            let preRulesText = preRulesNode.InnerText.Replace("â€”", "-").Replace("\n", "").Replace(",          ", "").Trim() // please dont hurt me
-                            sprintf "%s: %s %s" nameUrlNode.InnerText preRulesText rulesText |> Ok
+                            let name = nameUrlNode.InnerText
+                            let rulesText = rulesTextNodes.[0].InnerHtml |> fixRulesHtml name
+                            let preRulesText = preRulesNode.InnerText.Replace("â€”", "-").Replace("\n", "").Replace(",          ", "").Trim() |> fixPreRulesText // please dont hurt me
+                            sprintf "%s: %s: %s" name preRulesText rulesText |> Ok
                         else
                             ParseError
                     else
