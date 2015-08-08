@@ -87,9 +87,9 @@ let joinMessage channel = outMessage "join" [channel]
 let privMessage target message = outMessage "privmsg" [target; message]
 let channelMessage channel message = outMessage "privmsg" [channel; message]
 
-let nick = "sirsalad"
+let nick = "sirsaladrnd"
 let user = nick
-let channel = "#uakroncs"
+let channel = "#uakroncsrnd"
 
 let keepAliveModule ((prefixOpt, command, args): Message): Message seq =
     seq {
@@ -132,15 +132,14 @@ let shittyMagicModule ((prefixOpt, command, args): Message): Message seq =
                     let target = args.[0]
                     let message = args.[1]
 
-                    if target = nick then
-                        yield privMessage from_nick message
-                    else if target = channel then
-                        let keywords = extractKeywords message |> List.ofSeq
-                        if keywords.Length > 0 then
-                            for keyword in keywords do
-                                match getRulesTextLine keyword with
-                                    | Ok(response) -> yield response |> channelMessage channel
-                                    | failure -> yield sprintf "Failed to show %s due to %A" keyword failure |> channelMessage channel
+                    let respond = if target = nick then privMessage from_nick else channelMessage channel
+
+                    let keywords = extractKeywords message |> List.ofSeq
+                    if keywords.Length > 0 then
+                        for keyword in keywords do
+                            match getRulesTextLine keyword with
+                                | Ok(response) -> yield response |> respond
+                                | failure -> yield sprintf "Failed to show %s due to %A" keyword failure |> respond
                 | _ -> ()
     }
 
@@ -154,7 +153,7 @@ let execBot() =
             userMessage user |> send
             nickMessage nick |> send
 
-            let modules = [keepAliveModule; echoModule; shittyMagicModule]
+            let modules = [keepAliveModule; shittyMagicModule]
 
             let rec loop() =
                 for inMessage in gets() do
