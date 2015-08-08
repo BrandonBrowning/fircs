@@ -120,7 +120,7 @@ let echoModule ((prefixOpt, command, args): Message): Message seq =
 let shittyMagicModule ((prefixOpt, command, args): Message): Message seq =
     let extractKeywords (text: string): string seq =
         seq {
-            for m in Regex.Matches(text, "\|([\w_,\-'! ]{3,})\|") do
+            for m in Regex.Matches(text, "\|([\w_,\-'\"!:= ]{3,})\|") do
                 if m.Groups.Count = 2 then
                     yield m.Groups.[1].Value
         }
